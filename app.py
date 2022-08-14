@@ -1,10 +1,14 @@
 from flask import Flask, request,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Integer, String, Float
+from flask_marshmallow import Marshmallow
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:admin@localhost:5432/planets'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
+ma = Marshmallow(app)
 
 @app.cli.command('db_create')
 def db_create():
@@ -51,9 +55,20 @@ def db_seed():
                     password="password")
 
     db.session.add(test_user)
-    # db.session.commit()
+    db.session.commit()
+    print("Database seeded.")
 
 
+
+# Planets routes
+@app.route('/planets', methods=['GET'])
+def planets():
+    planets = Planet.query.all()
+    result = planets_schema.dump(planets)
+    return jsonify({
+        "success": True,
+        "planets": result
+    })
 
     
 
@@ -78,6 +93,22 @@ class Planet(db.Model):
     radius = Column(Float)
     distance = Column(Float)
 
+
+class UserSchema(ma.Schema):
+    class Meta:
+        fields = ('id', 'first_name', 'last_name', 'email', 'password')
+
+
+class PlanetSchema(ma.Schema):
+    class Meta:
+        fields = ('planet_id', 'planet_name', 'planet_type', 'home_star', 'mass', 'radius', 'distance')
+
+
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
+
+planet_schema = PlanetSchema()
+planets_schema = PlanetSchema(many=True)
 
 if __name__ == "__main__":
     app.run(debug=True)
