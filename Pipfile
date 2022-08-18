@@ -9,6 +9,7 @@ flask-sqlalchemy = "*"
 psycopg2 = "*"
 flask-marshmallow = "*"
 flask-jwt-extended = "*"
+flask-mail = "*"
 
 [dev-packages]
 
